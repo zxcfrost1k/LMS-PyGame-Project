@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QMainWindow, QCom
 go_play = False
 numSkin = '1'
 speedHero = 1
+speedStorm = 1
 nickname = 'user'
 
 
@@ -160,17 +161,30 @@ class Win3(QtWidgets.QDialog):
         self.back.resize(400, 400)
         self.back.setPixmap(self.backY)
 
-        self.speedTab = QLabel('<font color="white">Speed</font>', self)
-        self.speedTab.setFont(Qt.QFont('abc', 11))
-        self.speedTab.move(10, 10)
+        self.CSpeedTab = QLabel('<font color="white">Character speed</font>', self)
+        self.CSpeedTab.setFont(Qt.QFont('abc', 9))
+        self.CSpeedTab.move(10, 10)
 
-        self.speedBox = QComboBox(self)
-        self.speedBox.move(90, 10)
-        self.speedBox.addItems(['One', 'Two', 'Three', 'Four'])
-        self.speedBox.activated.connect(self.check_index)
+        self.StSpeedTab = QLabel('<font color="white">Storm speed</font>', self)
+        self.StSpeedTab.setFont(Qt.QFont('abc', 9))
+        self.StSpeedTab.move(10, 30)
 
-    def check_index(self):
-        self.main.indexes.append(self.speedBox.currentIndex() + 1)
+        self.CSpeedBox = QComboBox(self)
+        self.CSpeedBox.move(100, 10)
+        self.CSpeedBox.addItems(['One', 'Two'])
+        self.CSpeedBox.activated.connect(self.check_index_cSpeed)
+
+        self.StSpeedBox = QComboBox(self)
+        self.StSpeedBox.move(100, 30)
+        self.StSpeedBox.addItems(['One', 'Two'])
+        self.StSpeedBox.activated.connect(self.check_index_stSpeed)
+
+    def check_index_cSpeed(self):
+        self.main.CIndexes.append(self.CSpeedBox.currentIndex() + 1)
+
+    def check_index_stSpeed(self):
+        pass
+        self.main.StIndexes.append(self.StSpeedBox.currentIndex() + 1)
 
 
 class Win4(QtWidgets.QDialog):
@@ -247,9 +261,13 @@ class Win6(QtWidgets.QDialog):
         self.field.setText(nickname)
 
     def go(self):
-        global go_play
-        go_play = True
-        self.close()
+        global go_play, nickname
+        if self.field.text():
+            nickname = self.field.text()
+            go_play = True
+            self.close()
+        else:
+            self.field.setPlaceholderText('ENTER YOUR NICK')
 
 
 class Main(QMainWindow):
@@ -267,7 +285,8 @@ class Main(QMainWindow):
 
         self.numSkin = '1'
         self.speedHero = 1
-        self.indexes = []
+        self.CIndexes = []
+        self.StIndexes = []
 
         self.back = QLabel(self)
         self.backY = QPixmap(f'background.png')
@@ -322,9 +341,14 @@ class Main(QMainWindow):
         numSkin = self.numSkin
 
     def updateSettings(self):
-        global speedHero
+        global speedHero, speedStorm
         try:
-            speedHero = self.indexes[-1]
+            speedHero = self.CIndexes[-1]
+        except IndexError:
+            pass
+
+        try:
+            speedStorm = self.StIndexes[-1]
         except IndexError:
             pass
 
@@ -355,6 +379,9 @@ if __name__ == '__main__':
     main = Main()
     main.show()
     app.exec()
+
+    print(f'Отладка:\nНик - {nickname}\nСкорость персонажа - {speedStorm}\n'
+          f'Скорость шторма - {speedHero}\nНомер скина - {numSkin}')
 
     pygame.init()
     pygame.display.set_caption('MiniFortnite')
