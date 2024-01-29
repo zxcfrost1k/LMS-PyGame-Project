@@ -374,9 +374,18 @@ class Background(pygame.sprite.Sprite):
         self.rect.left, self.rect.top = location
 
 
+class PauseMenu(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setGeometry(100, 100, 350, 200)
+        self.setWindowTitle('Pause Menu')
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = Main()
+    pause = PauseMenu()
     main.show()
     app.exec()
 
@@ -408,8 +417,10 @@ if __name__ == '__main__':
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_F1:
                     raise SystemExit
+                if event.key == pygame.K_ESCAPE:
+                    pause.show()
 
         if keyboard.is_pressed('a'):
             char_rect.x -= speedHero
