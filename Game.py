@@ -9,6 +9,8 @@ from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QMainWindow, QCom
 
 
 go_play = False
+pausing = False
+running = True
 numSkin = '1'
 speedHero = 1
 speedStorm = 1
@@ -271,8 +273,8 @@ class Win6(QtWidgets.QDialog):
 
 
 class Main(QMainWindow):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
 
         self.setGeometry(800, 400, 300, 400)
         self.setWindowTitle('Menu')
@@ -359,9 +361,10 @@ class Main(QMainWindow):
         pass
 
     def closee(self):
-        global go_play
+        global go_play, running
         if go_play:
             self.close()
+            running = True
         else:
             pass
 
@@ -378,8 +381,52 @@ class PauseMenu(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setGeometry(100, 100, 350, 200)
+        global pausing
+
+        self.setGeometry(875, 264, 226, 270)
         self.setWindowTitle('Pause Menu')
+
+        self.back = QLabel(self)
+        self.backY = QPixmap('background.png')
+        self.back.move(0, 0)
+        self.back.resize(400, 400)
+        self.back.setPixmap(self.backY)
+
+        self.paused = QLabel(self)
+        self.pausedY = QPixmap('paused.png')
+        self.paused.move(0, 0)
+        self.paused.resize(220, 100)
+        self.paused.setPixmap(self.pausedY)
+
+        self.btnGoMM = QPushButton('Continue', self)
+        self.btnGoMM.move(30, 110)
+        self.btnGoMM.resize(166, 26)
+        self.btnGoMM.clicked.connect(self.continuee)
+
+        self.btnGoMM = QPushButton('Go to the Main Menu', self)
+        self.btnGoMM.move(30, 140)
+        self.btnGoMM.resize(166, 26)
+        self.btnGoMM.clicked.connect(self.quit)
+
+        self.btnGoMM = QPushButton('Leave', self)
+        self.btnGoMM.move(30, 170)
+        self.btnGoMM.resize(166, 26)
+        self.btnGoMM.clicked.connect(self.leave)
+
+    def quit(self):
+        global running
+
+        running = False
+        self.close()
+
+    def continuee(self):
+        global pausing
+
+        pausing = False
+        self.close()
+
+    def leave(self):
+        raise SystemExit
 
 
 if __name__ == '__main__':
@@ -397,11 +444,12 @@ if __name__ == '__main__':
 
     size = width, height = 1920, 1080
     fps = 144
-    running = True
 
     screen = pygame.display.set_mode(size)
     clock = pygame.time.Clock()
     BackGround = Background('map.png', [0, 0])
+
+    transparent_surface = pygame.Surface((1920, 1080), pygame.SRCALPHA)
 
     if go_play:
         char_img = pygame.image.load(f'skins/skin{numSkin}.png')
@@ -420,6 +468,7 @@ if __name__ == '__main__':
                 if event.key == pygame.K_F1:
                     raise SystemExit
                 if event.key == pygame.K_ESCAPE:
+                    pausing = True
                     pause.show()
 
         if keyboard.is_pressed('a'):
@@ -435,6 +484,12 @@ if __name__ == '__main__':
         screen.blit(BackGround.image, BackGround.rect)
         screen.blit(char_img, char_rect)
 
+        if pausing is True:
+            pygame.draw.circle(transparent_surface, (255, 255, 255, 100), (100, 100), 10000)
+            screen.blit(transparent_surface, (0, 0))
+
         clock.tick(fps)
         pygame.display.update()
     pygame.quit()
+    main.show()
+    app.exec()
