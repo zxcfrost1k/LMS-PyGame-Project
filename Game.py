@@ -1,4 +1,5 @@
 import sys
+import time
 import pygame
 import random
 import keyboard
@@ -11,10 +12,12 @@ from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QMainWindow, QCom
 go_play = False
 pausing = False
 running = True
+loss = False
+win = False
 numSkin = '1'
 speedHero = 1
 speedStorm = 1
-nickname = 'user'
+nickname = 'user1'
 
 
 class Win2(QtWidgets.QDialog):
@@ -470,14 +473,24 @@ if __name__ == '__main__':
                 if event.key == pygame.K_ESCAPE:
                     pausing = True
                     pause.show()
+                if event.key == pygame.K_F2:
+                    win = True
 
         if keyboard.is_pressed('a'):
+            pausing = False
+            pause.close()
             char_rect.x -= speedHero
         if keyboard.is_pressed('d'):
+            pausing = False
+            pause.close()
             char_rect.x += speedHero
         if keyboard.is_pressed('w'):
+            pausing = False
+            pause.close()
             char_rect.y -= speedHero
         if keyboard.is_pressed('s'):
+            pausing = False
+            pause.close()
             char_rect.y += speedHero
 
         screen.fill('#022027')
@@ -488,8 +501,12 @@ if __name__ == '__main__':
             pygame.draw.circle(transparent_surface, (255, 255, 255, 100), (100, 100), 10000)
             screen.blit(transparent_surface, (0, 0))
 
+        if win is True:
+            BackGround = Background('top1.png', [0, 0])
+
         clock.tick(fps)
         pygame.display.update()
+
     pygame.quit()
     main.show()
     app.exec()
