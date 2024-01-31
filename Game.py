@@ -6,7 +6,8 @@ import keyboard
 from PyQt5 import Qt
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QMainWindow, QComboBox, QLineEdit
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QMainWindow, QComboBox, QLineEdit, QTableWidget
+from PyQt5.QtWidgets import QTableWidgetItem
 
 
 go_play = False
@@ -18,7 +19,6 @@ numSkin = '1'
 speedHero = 1
 speedStorm = 1
 nickname = 'user1'
-number_in_res = int([i.split()[0] for i in open('results.txt')][-1]) if open('results.txt').readline() else 0
 
 
 class Win2(QtWidgets.QDialog):
@@ -186,7 +186,7 @@ class Win4(QtWidgets.QDialog):
 
         self.main = root
 
-        self.setGeometry(1470, 100, 350, 200)
+        self.setGeometry(1270, 100, 420, 200)
         self.setWindowTitle('Results')
 
         self.back = QLabel(self)
@@ -194,6 +194,14 @@ class Win4(QtWidgets.QDialog):
         self.back.move(0, 0)
         self.back.resize(400, 400)
         self.back.setPixmap(self.backY)
+
+        mass = [i.split() for i in open('results.txt')]
+        self.table = QTableWidget(len(mass), 4, self)
+        self.table.resize(420, 200)
+        self.table.setHorizontalHeaderLabels(['Nick', 'Result', 'Zones reached', 'Time'])
+        for i in range(0, len(mass)):
+            for j in range(0, 4):
+                self.table.setItem(i, j, QTableWidgetItem(mass[i][j]))
 
 
 class Win5(QtWidgets.QDialog):
@@ -341,13 +349,12 @@ class Main(QMainWindow):
 
     @staticmethod
     def updateResults(start_time, result, zones_count):
-        global number_in_res, nickname
+        global nickname
 
         end_time = time.time()
         elapsed_time = end_time - start_time
-        number_in_res += 1
         file_for_results = open('results.txt', mode='a')
-        file_for_results.write(f'{number_in_res} {nickname} {result} {zones_count} {elapsed_time}\n')
+        file_for_results.write(f'{nickname} {result} {zones_count} {round(elapsed_time)}sec\n')
 
     def howToPlay(self):
         pass
@@ -413,6 +420,12 @@ class GameOverWindow(QtWidgets.QDialog):
 
         self.setGeometry(800, 400, 300, 150)
         self.setWindowTitle('Game Over')
+
+        self.back = QLabel(self)
+        self.backY = QPixmap(f'background.png')
+        self.back.move(0, 0)
+        self.back.resize(400, 400)
+        self.back.setPixmap(self.backY)
 
         self.result_label = QLabel(f'You {result}!\nYou reached: {count} zones', self)
         self.result_label.setFont(Qt.QFont('abc', 14))
