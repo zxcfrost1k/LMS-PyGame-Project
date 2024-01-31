@@ -18,6 +18,7 @@ numSkin = '1'
 speedHero = 1
 speedStorm = 1
 nickname = 'user1'
+number_in_res = int([i.split()[0] for i in open('results.txt')][-1]) if open('results.txt').readline() else 0
 
 
 class Win2(QtWidgets.QDialog):
@@ -168,28 +169,15 @@ class Win3(QtWidgets.QDialog):
 
         self.CSpeedTab = QLabel('<font color="white">Character speed</font>', self)
         self.CSpeedTab.setFont(Qt.QFont('abc', 9))
-        self.CSpeedTab.move(10, 10)
-
-        self.StSpeedTab = QLabel('<font color="white">Storm speed</font>', self)
-        self.StSpeedTab.setFont(Qt.QFont('abc', 9))
-        self.StSpeedTab.move(10, 30)
+        self.CSpeedTab.move(5, 30)
 
         self.CSpeedBox = QComboBox(self)
-        self.CSpeedBox.move(100, 10)
+        self.CSpeedBox.move(100, 28)
         self.CSpeedBox.addItems(['One', 'Two'])
         self.CSpeedBox.activated.connect(self.check_index_cSpeed)
 
-        self.StSpeedBox = QComboBox(self)
-        self.StSpeedBox.move(100, 30)
-        self.StSpeedBox.addItems(['One', 'Two'])
-        self.StSpeedBox.activated.connect(self.check_index_stSpeed)
-
     def check_index_cSpeed(self):
         self.main.CIndexes.append(self.CSpeedBox.currentIndex() + 1)
-
-    def check_index_stSpeed(self):
-        pass
-        self.main.StIndexes.append(self.StSpeedBox.currentIndex() + 1)
 
 
 class Win4(QtWidgets.QDialog):
@@ -327,7 +315,6 @@ class Main(QMainWindow):
         self.btnCheckResults.move(20, 294)
         self.btnCheckResults.resize(260, 26)
         self.btnCheckResults.clicked.connect(self.checkResults.exec)
-        self.btnCheckResults.clicked.connect(self.updateResults)
 
         self.btnSettings = QPushButton('Settings', self)
         self.btnSettings.move(20, 324)
@@ -346,19 +333,21 @@ class Main(QMainWindow):
         numSkin = self.numSkin
 
     def updateSettings(self):
-        global speedHero, speedStorm
+        global speedHero
         try:
             speedHero = self.CIndexes[-1]
         except IndexError:
             pass
 
-        try:
-            speedStorm = self.StIndexes[-1]
-        except IndexError:
-            pass
+    @staticmethod
+    def updateResults(start_time, result, zones_count):
+        global number_in_res, nickname
 
-    def updateResults(self):
-        pass
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        number_in_res += 1
+        file_for_results = open('results.txt', mode='a')
+        file_for_results.write(f'{number_in_res} {nickname} {result} {zones_count} {elapsed_time}\n')
 
     def howToPlay(self):
         pass
@@ -368,8 +357,13 @@ class Main(QMainWindow):
         if go_play:
             self.close()
             running = True
+            GAME().run()
         else:
             pass
+
+    def game_over(self, result, zones_count):
+        game_over_window = GameOverWindow(self, result, zones_count)
+        game_over_window.exec_()
 
 
 class Background(pygame.sprite.Sprite):
@@ -380,133 +374,181 @@ class Background(pygame.sprite.Sprite):
         self.rect.left, self.rect.top = location
 
 
-class PauseMenu(QMainWindow):
+class Circle(pygame.sprite.Sprite):
+    def __init__(self, initial_radius, border_color, location):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((initial_radius * 2, initial_radius * 2), pygame.SRCALPHA).convert_alpha()
+        self.border_color = border_color
+        self.radius = initial_radius
+
+        # Рисуем абсолютно прозрачный круг
+        pygame.draw.circle(self.image, (0, 0, 0, 70), (initial_radius, initial_radius), initial_radius)
+
+        # Рисуем белый контур круга
+        pygame.draw.circle(self.image, border_color, (initial_radius, initial_radius), initial_radius, 2)
+
+        self.rect = self.image.get_rect()
+        self.rect.center = location
+
+    def decrease_radius(self, delta_radius=3):
+        # Уменьшаем радиус на delta_radius
+        self.radius -= delta_radius
+        self.image = pygame.Surface((self.radius * 2, self.radius * 2), pygame.SRCALPHA).convert_alpha()
+
+        # Рисуем абсолютно прозрачный круг
+        pygame.draw.circle(self.image, (0, 0, 0, 70), (self.radius, self.radius), self.radius)
+
+        # Рисуем белый контур круга
+        pygame.draw.circle(self.image, self.border_color, (self.radius, self.radius), self.radius, 2)
+
+        self.rect = self.image.get_rect()
+        self.rect.center = self.rect.center
+
+
+class GameOverWindow(QtWidgets.QDialog):
+    def __init__(self, root, result, count, **kwargs):
+        super().__init__(root, **kwargs)
+
+        self.main = root
+
+        self.setGeometry(800, 400, 300, 150)
+        self.setWindowTitle('Game Over')
+
+        self.result_label = QLabel(f'You {result}!\nYou reached: {count} zones', self)
+        self.result_label.setFont(Qt.QFont('abc', 14))
+        self.result_label.move(80, 40)
+
+        self.ok_button = QPushButton('OK', self)
+        self.ok_button.move(120, 100)
+        self.ok_button.clicked.connect(self.closee)
+
+    def closee(self):
+        self.close()
+        Main().show()
+        app.exec()
+
+
+print(f'Отладка:\nНик - {nickname}\nСкорость персонажа - {speedStorm}\nНомер скина - {numSkin}')
+
+
+class GAME:
     def __init__(self):
-        super().__init__()
+        pygame.init()
+        pygame.display.set_caption('MiniFortnite')
 
-        global pausing
-
-        self.setGeometry(875, 264, 226, 270)
-        self.setWindowTitle('Pause Menu')
-
-        self.back = QLabel(self)
-        self.backY = QPixmap('background.png')
-        self.back.move(0, 0)
-        self.back.resize(400, 400)
-        self.back.setPixmap(self.backY)
-
-        self.paused = QLabel(self)
-        self.pausedY = QPixmap('paused.png')
-        self.paused.move(0, 0)
-        self.paused.resize(220, 100)
-        self.paused.setPixmap(self.pausedY)
-
-        self.btnGoMM = QPushButton('Continue', self)
-        self.btnGoMM.move(30, 110)
-        self.btnGoMM.resize(166, 26)
-        self.btnGoMM.clicked.connect(self.continuee)
-
-        self.btnGoMM = QPushButton('Go to the Main Menu', self)
-        self.btnGoMM.move(30, 140)
-        self.btnGoMM.resize(166, 26)
-        self.btnGoMM.clicked.connect(self.quit)
-
-        self.btnGoMM = QPushButton('Leave', self)
-        self.btnGoMM.move(30, 170)
-        self.btnGoMM.resize(166, 26)
-        self.btnGoMM.clicked.connect(self.leave)
-
-    def quit(self):
+    def run(self):
         global running
 
-        running = False
-        self.close()
+        size = width, height = 1920, 1080
+        fps = 144
+        zones_count = 0
 
-    def continuee(self):
-        global pausing
+        screen = pygame.display.set_mode(size)
+        clock = pygame.time.Clock()
+        BackGround = Background('map.png', [0, 0])
 
-        pausing = False
-        self.close()
+        rectangle_width, rectangle_height = 800, 800
+        rectangle_left = (width - rectangle_width) // 2
+        rectangle_top = (height - rectangle_height) // 2
 
-    def leave(self):
-        raise SystemExit
+        circle_radius = 100
+        circle_border_color = (255, 255, 255)
+        circle_sprite = Circle(circle_radius, circle_border_color,
+                               (random.randint(rectangle_left, rectangle_left + rectangle_width),
+                                random.randint(rectangle_top, rectangle_top + rectangle_height)))
+
+        if go_play:
+            start_time = time.time()
+            char_img = pygame.image.load(f'skins/skin{numSkin}.png')
+        else:
+            raise SystemExit
+        char_rect = char_img.get_rect()
+        char_rect.center = (random.randint(540, 800), random.randint(80, 800))
+
+        all_sprites = pygame.sprite.Group(circle_sprite)
+
+        WHITE = (255, 255, 255)
+        FONT = pygame.font.Font(None, 36)
+        initial_time = 7
+
+        if speedHero == 1:
+            initial_time = 7
+        if speedHero == 2:
+            initial_time = 4
+        if speedHero == 3:
+            initial_time = 3
+        if speedHero == 4:
+            initial_time = 2.5
+        current_time = initial_time
+        last_update_time = pygame.time.get_ticks()
+
+        while running:
+            dt = clock.tick(fps) / 1000
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_F1:
+                        raise SystemExit
+
+            # Пересоздаем окружность в пределах прямоугольника при коллизии
+            if char_rect.colliderect(circle_sprite.rect):
+                zones_count += 1
+                current_time = initial_time
+                circle_sprite.decrease_radius()
+                if circle_sprite.radius <= 5:
+                    result = 'win'
+                    Main().game_over(result, zones_count)
+                    Main().updateResults(start_time, result, zones_count)
+                    zones_count = 0
+                    running = False
+                circle_sprite.rect.center = (random.randint(rectangle_left, rectangle_left + rectangle_width),
+                                             random.randint(rectangle_top, rectangle_top + rectangle_height))
+
+            if keyboard.is_pressed('a'):
+                char_rect.x -= speedHero * 5
+            if keyboard.is_pressed('d'):
+                char_rect.x += speedHero * 5
+            if keyboard.is_pressed('w'):
+                char_rect.y -= speedHero * 5
+            if keyboard.is_pressed('s'):
+                char_rect.y += speedHero * 5
+
+            current_ticks = pygame.time.get_ticks()
+            if current_ticks - last_update_time >= 1000:
+                last_update_time = current_ticks
+                current_time -= 1
+
+                # Проверка на окончание времени
+                if current_time <= 0:
+                    running = False
+                    result = 'lost'
+                    Main().game_over(result, zones_count)
+                    Main().updateResults(start_time, result, zones_count)
+                    zones_count = 0
+
+            # Отображение таймера
+            timer_text = FONT.render(f'Time left: {round(current_time - 0.01)}', True, WHITE)
+            zones_text = FONT.render(f'Zones: {zones_count}', True, WHITE)
+            screen.blit(timer_text, (10, 10))
+            screen.blit(zones_text, (10, 50))
+
+            pygame.display.update()
+            screen.fill('#022027')
+            screen.blit(BackGround.image, BackGround.rect)
+            screen.blit(char_img, char_rect)
+
+            all_sprites.draw(screen)
+
+            clock.tick(fps)
+            pygame.display.update()
+
+        pygame.quit()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = Main()
-    pause = PauseMenu()
-    main.show()
-    app.exec()
-
-    print(f'Отладка:\nНик - {nickname}\nСкорость персонажа - {speedStorm}\n'
-          f'Скорость шторма - {speedHero}\nНомер скина - {numSkin}')
-
-    pygame.init()
-    pygame.display.set_caption('MiniFortnite')
-
-    size = width, height = 1920, 1080
-    fps = 144
-
-    screen = pygame.display.set_mode(size)
-    clock = pygame.time.Clock()
-    BackGround = Background('map.png', [0, 0])
-
-    transparent_surface = pygame.Surface((1920, 1080), pygame.SRCALPHA)
-
-    if go_play:
-        char_img = pygame.image.load(f'skins/skin{numSkin}.png')
-    else:
-        raise SystemExit
-    char_rect = char_img.get_rect()
-    char_rect.center = (random.randint(540, 1500), random.randint(80, 1000))
-
-    while running:
-        dt = clock.tick(fps) / 1000
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_F1:
-                    raise SystemExit
-                if event.key == pygame.K_ESCAPE:
-                    pausing = True
-                    pause.show()
-                if event.key == pygame.K_F2:
-                    win = True
-
-        if keyboard.is_pressed('a'):
-            pausing = False
-            pause.close()
-            char_rect.x -= speedHero
-        if keyboard.is_pressed('d'):
-            pausing = False
-            pause.close()
-            char_rect.x += speedHero
-        if keyboard.is_pressed('w'):
-            pausing = False
-            pause.close()
-            char_rect.y -= speedHero
-        if keyboard.is_pressed('s'):
-            pausing = False
-            pause.close()
-            char_rect.y += speedHero
-
-        screen.fill('#022027')
-        screen.blit(BackGround.image, BackGround.rect)
-        screen.blit(char_img, char_rect)
-
-        if pausing is True:
-            pygame.draw.circle(transparent_surface, (255, 255, 255, 100), (100, 100), 10000)
-            screen.blit(transparent_surface, (0, 0))
-
-        if win is True:
-            BackGround = Background('top1.png', [0, 0])
-
-        clock.tick(fps)
-        pygame.display.update()
-
-    pygame.quit()
     main.show()
     app.exec()
