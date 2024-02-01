@@ -3,25 +3,22 @@ import time
 import pygame
 import random
 import keyboard
-from PyQt5 import Qt
-from PyQt5 import QtWidgets
+from PyQt5 import Qt, QtWidgets
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QMainWindow, QComboBox, QLineEdit, QTableWidget
-from PyQt5.QtWidgets import QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QMainWindow, QComboBox, QLineEdit
+from PyQt5.QtWidgets import QTableWidgetItem, QTableWidget
 
 
-go_play = False
-pausing = False
-running = True
-numSkin = '1'
+# Определение констант
+go_play, running = False, True
+numSkin, nickname = '1', 'user1'
 speedHero = 1
-nickname = 'user1'
 
 
 class Win2(QtWidgets.QDialog):
     def __init__(self, root, **kwargs):
         super().__init__(root, **kwargs)
-
+        # Создаём и отображаем окно с выбором скинов
         self.main = root
 
         self.setGeometry(100, 100, 1720, 880)
@@ -143,6 +140,7 @@ class Win2(QtWidgets.QDialog):
         self.btn10.clicked.connect(self.ok)
 
     def ok(self):
+        # Передаём в main, какой скин выбран
         if self.nameSkinss[self.sender().sender().text()]:
             self.main.numSkin = self.nameSkinss[self.sender().sender().text()]
 
@@ -152,10 +150,11 @@ class Win2(QtWidgets.QDialog):
 class Win3(QtWidgets.QDialog):
     def __init__(self, root, **kwargs):
         super().__init__(root, **kwargs)
+        # Создаём и отображаем окно с настройками
 
         self.main = root
 
-        self.setGeometry(875, 270, 150, 85)
+        self.setGeometry(875, 270, 160, 85)
         self.setWindowTitle('Settings')
 
         self.back = QLabel(self)
@@ -170,26 +169,29 @@ class Win3(QtWidgets.QDialog):
 
         self.CSpeedBox = QComboBox(self)
         self.CSpeedBox.move(100, 28)
-        self.CSpeedBox.addItems(['One', 'Two'])
+        self.CSpeedBox.addItems(['One', 'Two', 'Three', 'Four'])
         self.CSpeedBox.activated.connect(self.check_index_cSpeed)
 
     def check_index_cSpeed(self):
+        # Передаём в main, какие настройки изменены
         self.main.CIndexes.append(self.CSpeedBox.currentIndex() + 1)
 
 
 class Win4(QtWidgets.QDialog):
     def __init__(self, root, **kwargs):
         super().__init__(root, **kwargs)
-
+        # Создаём и отображаем таблицу результатов предыдущих игр
         self.main = root
 
         self.setGeometry(1270, 100, 420, 200)
         self.setWindowTitle('Results')
 
         mass = [i.split() for i in open('results.txt')]
+
         self.table = QTableWidget(len(mass), 4, self)
         self.table.resize(420, 200)
         self.table.setHorizontalHeaderLabels(['Nick', 'Result', 'Zones reached', 'Time'])
+
         for i in range(0, len(mass)):
             for j in range(0, 4):
                 self.table.setItem(i, j, QTableWidgetItem(mass[i][j]))
@@ -198,7 +200,7 @@ class Win4(QtWidgets.QDialog):
 class Win5(QtWidgets.QDialog):
     def __init__(self, root, **kwargs):
         super().__init__(root, **kwargs)
-
+        # Создаём и отображаем окно с описанием игры
         self.main = root
 
         self.setGeometry(100, 100, 350, 200)
@@ -214,7 +216,7 @@ class Win5(QtWidgets.QDialog):
 class Win6(QtWidgets.QDialog):
     def __init__(self, root, **kwargs):
         global nickname
-
+        # Создаём и отображаем окно с вводом никнейма
         super().__init__(root, **kwargs)
 
         self.main = root
@@ -234,16 +236,15 @@ class Win6(QtWidgets.QDialog):
         self.icon.resize(500, 250)
         self.icon.setPixmap(self.iconY)
 
+        # Если игра не была закрыта, то сразу подставляем предыдущий ник игрока в поле ввода
         if nickname != 'user1':
             self.field = QLineEdit(f'{nickname}', self)
-            self.field.setPlaceholderText('Enter your nick')
-            self.field.move(100, 240)
-            self.field.resize(150, 23)
         else:
             self.field = QLineEdit(self)
-            self.field.setPlaceholderText('Enter your nick')
-            self.field.move(100, 240)
-            self.field.resize(150, 23)
+
+        self.field.setPlaceholderText('Enter your nick')
+        self.field.move(100, 240)
+        self.field.resize(150, 23)
 
         self.btnRan = QPushButton('Random', self)
         self.btnRan.move(260, 240)
@@ -256,11 +257,13 @@ class Win6(QtWidgets.QDialog):
 
     def random(self):
         global nickname
+        # Присваиваем рандомный никнейм игроку
         nickname = f'user{random.randint(10 ** 6, 10 ** 7)}'
 
         self.field.setText(nickname)
 
     def go(self):
+        # Проверка на ввод никнейма, если всё в порядке, то запускаем игру, иначе агрессивно требуем его ввод
         global go_play, nickname
         if self.field.text():
             nickname = self.field.text()
@@ -273,6 +276,7 @@ class Win6(QtWidgets.QDialog):
 class Main(QMainWindow):
     def __init__(self):
         super().__init__()
+        # Приветственное/стартовое окно
 
         self.setGeometry(800, 400, 300, 400)
         self.setWindowTitle('Menu')
@@ -333,32 +337,33 @@ class Main(QMainWindow):
         self.btnHowToPlay.move(20, 354)
         self.btnHowToPlay.resize(260, 26)
         self.btnHowToPlay.clicked.connect(self.reference.exec)
-        self.btnHowToPlay.clicked.connect(self.howToPlay)
 
     def updateNumSkin(self):
         global numSkin
+        # Обновляем скин
         numSkin = self.numSkin
 
     def updateSettings(self):
         global speedHero
+        # Обновляем скорость героя
         try:
             speedHero = self.CIndexes[-1]
         except IndexError:
             pass
 
-    def updateResults(self, start_time, result, zones_count):
+    @staticmethod
+    def updateResults(start_time, result, zones_count):
         global nickname
+        # Обновляем результаты
 
         end_time = time.time()
         elapsed_time = end_time - start_time
         file_for_results = open('results.txt', mode='a')
         file_for_results.write(f'{nickname} {result} {zones_count} {round(elapsed_time)}sec\n')
 
-    def howToPlay(self):
-        pass
-
     def closee(self):
         global go_play, running
+        # Если получили никнейм, то запускаем игру, иначе ждём
         if go_play:
             self.hide()
             running = True
@@ -367,12 +372,14 @@ class Main(QMainWindow):
             pass
 
     def game_over(self, result, zones_count):
+        # Открываем окно завершения игры
         game_over_window = GameOverWindow(self, result, zones_count)
         game_over_window.exec_()
 
 
 class Background(pygame.sprite.Sprite):
     def __init__(self, image_file, location):
+        # Вспомогательный класс для добавления карты
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load(image_file)
         self.rect = self.image.get_rect()
@@ -413,7 +420,7 @@ class Circle(pygame.sprite.Sprite):
 class GameOverWindow(QtWidgets.QDialog):
     def __init__(self, root, result, count, **kwargs):
         super().__init__(root, **kwargs)
-
+        # Создаём и отображаем окно завершения игры
         self.main = root
 
         self.setGeometry(800, 400, 300, 150)
@@ -425,6 +432,7 @@ class GameOverWindow(QtWidgets.QDialog):
         self.back.resize(400, 150)
         self.back.setPixmap(self.backY)
 
+        # Выводим результат завершившейся игры
         self.result_label = QLabel(f'<font color="white">You <b>{result}!</b><br/>'
                                    f'You <b>reached:</b> {count} zones</font>', self)
         self.result_label.setFont(Qt.QFont('abc', 16))
@@ -435,20 +443,20 @@ class GameOverWindow(QtWidgets.QDialog):
         self.ok_button.clicked.connect(self.closee)
 
     def closee(self):
+        # Закрываем отображаемое окно и переходим к стартовому
         self.close()
         Main().show()
         app.exec()
 
 
-print(f'Отладка:\nНик - {nickname}\nСкорость персонажа - {speedHero}\nНомер скина - {numSkin}')
-
-
 class GAME:
     def __init__(self):
+        # Запускаем саму игру
         pygame.init()
         pygame.display.set_caption('MiniFortnite')
 
-    def run(self):
+    @staticmethod
+    def run():
         global running
 
         size = width, height = 1920, 1080
@@ -457,7 +465,7 @@ class GAME:
 
         screen = pygame.display.set_mode(size)
         clock = pygame.time.Clock()
-        BackGround = Background('map.png', [0, 0])
+        BackGround = Background('map.png', [0, 0])  # Добавляем кату
 
         rectangle_width, rectangle_height = 800, 800
         rectangle_left = (width - rectangle_width) // 2
@@ -471,10 +479,11 @@ class GAME:
 
         if go_play:
             start_time = time.time()
-            char_img = pygame.image.load(f'skins/skin{numSkin}.png')
+            char_img = pygame.image.load(f'skins/skin{numSkin}.png')  # Добавляем выбранный скин
         else:
             raise SystemExit
         char_rect = char_img.get_rect()
+        # Спавним героя в рандомном месте на карте
         char_rect.center = (random.randint(540, 800), random.randint(80, 800))
 
         all_sprites = pygame.sprite.Group(circle_sprite)
@@ -483,6 +492,7 @@ class GAME:
         FONT = pygame.font.Font(None, 36)
         initial_time = 7
 
+        # Определения времени на преодоление дистанции от зоны до зоны
         if speedHero == 1:
             initial_time = 7
         if speedHero == 2:
@@ -501,8 +511,11 @@ class GAME:
                 if event.type == pygame.QUIT:
                     running = False
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_F1:
+                    if event.key == pygame.K_F4:
                         raise SystemExit
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+                        Main().show()
 
             # Пересоздаем окружность в пределах прямоугольника при коллизии
             if char_rect.colliderect(circle_sprite.rect):
@@ -518,6 +531,7 @@ class GAME:
                 circle_sprite.rect.center = (random.randint(rectangle_left, rectangle_left + rectangle_width),
                                              random.randint(rectangle_top, rectangle_top + rectangle_height))
 
+            # Передвижение персонажа
             if keyboard.is_pressed('a'):
                 char_rect.x -= speedHero * 5
             if keyboard.is_pressed('d'):
