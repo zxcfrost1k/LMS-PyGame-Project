@@ -13,11 +13,8 @@ from PyQt5.QtWidgets import QTableWidgetItem
 go_play = False
 pausing = False
 running = True
-loss = False
-win = False
 numSkin = '1'
 speedHero = 1
-speedStorm = 1
 nickname = 'user1'
 
 
@@ -189,12 +186,6 @@ class Win4(QtWidgets.QDialog):
         self.setGeometry(1270, 100, 420, 200)
         self.setWindowTitle('Results')
 
-        self.back = QLabel(self)
-        self.backY = QPixmap('background.png')
-        self.back.move(0, 0)
-        self.back.resize(400, 400)
-        self.back.setPixmap(self.backY)
-
         mass = [i.split() for i in open('results.txt')]
         self.table = QTableWidget(len(mass), 4, self)
         self.table.resize(420, 200)
@@ -222,6 +213,8 @@ class Win5(QtWidgets.QDialog):
 
 class Win6(QtWidgets.QDialog):
     def __init__(self, root, **kwargs):
+        global nickname
+
         super().__init__(root, **kwargs)
 
         self.main = root
@@ -241,10 +234,16 @@ class Win6(QtWidgets.QDialog):
         self.icon.resize(500, 250)
         self.icon.setPixmap(self.iconY)
 
-        self.field = QLineEdit(self)
-        self.field.setPlaceholderText('Enter your nick')
-        self.field.move(100, 240)
-        self.field.resize(150, 23)
+        if nickname != 'user1':
+            self.field = QLineEdit(f'{nickname}', self)
+            self.field.setPlaceholderText('Enter your nick')
+            self.field.move(100, 240)
+            self.field.resize(150, 23)
+        else:
+            self.field = QLineEdit(self)
+            self.field.setPlaceholderText('Enter your nick')
+            self.field.move(100, 240)
+            self.field.resize(150, 23)
 
         self.btnRan = QPushButton('Random', self)
         self.btnRan.move(260, 240)
@@ -347,8 +346,7 @@ class Main(QMainWindow):
         except IndexError:
             pass
 
-    @staticmethod
-    def updateResults(start_time, result, zones_count):
+    def updateResults(self, start_time, result, zones_count):
         global nickname
 
         end_time = time.time()
@@ -362,7 +360,7 @@ class Main(QMainWindow):
     def closee(self):
         global go_play, running
         if go_play:
-            self.close()
+            self.hide()
             running = True
             GAME().run()
         else:
@@ -424,12 +422,12 @@ class GameOverWindow(QtWidgets.QDialog):
         self.back = QLabel(self)
         self.backY = QPixmap(f'background.png')
         self.back.move(0, 0)
-        self.back.resize(400, 400)
+        self.back.resize(400, 150)
         self.back.setPixmap(self.backY)
 
-        self.result_label = QLabel(f'You {result}!\nYou reached: {count} zones', self)
-        self.result_label.setFont(Qt.QFont('abc', 14))
-        self.result_label.move(80, 40)
+        self.result_label = QLabel(f'<font color="white">You <b>{result}!</b><br/>You <b>reached:</b> {count} zones</font>', self)
+        self.result_label.setFont(Qt.QFont('abc', 16))
+        self.result_label.move(60, 40)
 
         self.ok_button = QPushButton('OK', self)
         self.ok_button.move(120, 100)
@@ -441,7 +439,7 @@ class GameOverWindow(QtWidgets.QDialog):
         app.exec()
 
 
-print(f'Отладка:\nНик - {nickname}\nСкорость персонажа - {speedStorm}\nНомер скина - {numSkin}')
+print(f'Отладка:\nНик - {nickname}\nСкорость персонажа - {speedHero}\nНомер скина - {numSkin}')
 
 
 class GAME:
