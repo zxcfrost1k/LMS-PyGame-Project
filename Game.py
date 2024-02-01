@@ -202,8 +202,22 @@ class Win5(QtWidgets.QDialog):
         super().__init__(root, **kwargs)
         # Создаём и отображаем окно с описанием игры
         self.main = root
+        description = ('<font color="white"><b>Welcome to FortniteMini!</b>'
+                       '<br/>The gameplay is quite simple.'
+                       '<br/>Just have time to move from'
+                       '<br/>one zone to another in'
+                       '<br/>a certain amount of time.'
+                       '<br/>Good luck!</font>')
 
-        self.setGeometry(100, 100, 350, 200)
+        descriptioN = ('<font color="white"><br/>— Movement on WASD'
+                       '<br/>— Press ESC to exit the main menu'
+                       '<br/>— You can change the speed settings'
+                       '<br/>— Press F4 to exit the desktop'
+                       '<br/><br/><br/><br/><br/><br/><br/>'
+                       '<br/><em>made by 2xVlad</em>'
+                       '</font>')
+
+        self.setGeometry(100, 100, 350, 400)
         self.setWindowTitle('How to play?')
 
         self.back = QLabel(self)
@@ -211,6 +225,14 @@ class Win5(QtWidgets.QDialog):
         self.back.move(0, 0)
         self.back.resize(400, 400)
         self.back.setPixmap(self.backY)
+
+        self.description = QLabel(description, self)
+        self.description.setFont(Qt.QFont('abc', 12))
+        self.description.move(20, 10)
+
+        self.descriptioN = QLabel(descriptioN, self)
+        self.descriptioN.setFont(Qt.QFont('abc', 11))
+        self.descriptioN.move(20, 160)
 
 
 class Win6(QtWidgets.QDialog):
