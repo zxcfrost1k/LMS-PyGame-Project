@@ -544,6 +544,8 @@ class GAME:
                 zones_count += 1
                 current_time = initial_time
                 circle_sprite.decrease_radius()
+
+                # Проверка на победу
                 if circle_sprite.radius <= 5:
                     result = 'win'
                     Main().game_over(result, zones_count)
