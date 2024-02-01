@@ -425,7 +425,8 @@ class GameOverWindow(QtWidgets.QDialog):
         self.back.resize(400, 150)
         self.back.setPixmap(self.backY)
 
-        self.result_label = QLabel(f'<font color="white">You <b>{result}!</b><br/>You <b>reached:</b> {count} zones</font>', self)
+        self.result_label = QLabel(f'<font color="white">You <b>{result}!</b><br/>'
+                                   f'You <b>reached:</b> {count} zones</font>', self)
         self.result_label.setFont(Qt.QFont('abc', 16))
         self.result_label.move(60, 40)
 
