@@ -595,6 +595,7 @@ class GAME:
             pygame.display.update()
 
         pygame.quit()
+        main.show()
 
 
 if __name__ == '__main__':
